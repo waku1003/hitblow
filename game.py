@@ -6,138 +6,42 @@
    import も自分の場所の近くに書くこと（ファイル先頭にまとめない＝衝突回避）。
 """
 
-from itertools import permutations
 from .core import judge, make_secret
-import threading
-import time
 
-_is_playimg = False
-
-def play_loop():
-    try:
-        import winsound
-
-        melody = [
-            {523,200},
-            {587,200},
-            {659,200},
-            {698,200},
-            {784,400},
-            {659,400},
-            {523,600},
-        ]
-        while _is_playing:
-            for freq, duration in melody:
-                if not _is_playing:
-                    break
-                    winsound.Beep(freq,duration)
-                    time.sleep(0.1)
-    except Exception
-        pass
-
-def
-def make_candidates(digits=3):
-    return [
-        "".join(p)
-        for p in permutations("0123456789", digits)
-    ]
 
 def play(digits=3):
     secret = make_secret(digits)
-    print(f"Hit & Blow（{digits}桁・重複なし）")
+    print(f"Hit & Blow（{digits} 桁・重複なし）")
+
+    # ===== ① 開始時に足す（難易度・あいさつ など）: ここに書く =====
+    from .bgm import start_bgm
+    start_bgm()  # ゲーム開始と同時にBGMスタート！♪
 
     tries = 0
-
     while True:
         guess = input("予想 > ").strip()
 
-        if len(guess) != digits or not guess.isdigit():
-            print(f"{digits}桁の数字で入力してください")
+        # ===== ② 入力コマンドに足す（ヒント など）: ここに書く（import もここに） =====
+        from .hint import give_hint
+
+        if guess == "h" or guess == "hint":
+            give_hint()
             continue
 
+        if len(guess) != digits or not guess.isdigit():
+            print(f"{digits} 桁の数字で入力してね")
+            continue
         tries += 1
-
         hit, blow = judge(secret, guess)
-
-        print(f"Hit={hit} Blow={blow}")
-
+        print(f"  Hit={hit}  Blow={blow}")
         if hit == digits:
-            print(f"正解！ {tries}回でクリア！（答え {secret}）")
-            return tries
 
+            # ===== ③ 勝利時に足す（スコア・履歴 など）: ここに書く =====
+            from .bgm import stop_bgm
+            stop_bgm()  # クリアしたらBGMを止める！
 
-def ai_play(digits=3):
-    candidates = make_candidates(digits)
+            from .win import celebrate
+            celebrate()  # お祝いのファンファーレ♪
 
-    print("あなたが秘密の数字を決めてください。")
-    input("決めたらEnterを押してください。")
-
-    tries = 0
-
-    while True:
-        guess = candidates[0]
-        tries += 1
-
-        print(f"\nAIの予想：{guess}")
-
-        hit = int(input("Hit > "))
-        blow = int(input("Blow > "))
-
-        if hit == digits:
-            print(f"\nAIが {tries} 回で正解しました！")
-            return tries
-
-        candidates = [
-            c
-            for c in candidates
-            if judge(c, guess) == (hit, blow)
-        ]
-
-        if not candidates:
-            print("入力されたHit・Blowが矛盾しています。")
-            return None
-
-def versus():
-    print("======================")
-    print("      AI対戦モード")
-    print("======================")
-
-    print("\n【AIのターン】")
-    ai_tries = ai_play()
-
-    if ai_tries is None:
-        return
-
-    print("\n======================")
-    print("   今度はあなたの番！")
-    print("======================")
-
-    player_tries = play()
-
-    print("\n====== RESULT ======")
-    print(f"AI      : {ai_tries} 回")
-    print(f"Player  : {player_tries} 回")
-
-    if ai_tries < player_tries:
-        print("🤖 AIの勝ち！")
-
-    elif ai_tries > player_tries:
-        print("🎉 あなたの勝ち！")
-
-    else:
-        print("🤝 引き分け！")
-
-mode = input("""
-1 : 通常モード
-2 : AI対戦モード
-
-> """).strip()
-
-if mode == "1":
-    play()
-
-elif mode == "2":
-    versus()
-
-else:
-    print("1 または 2 を入力してください。")
+            print(f"正解！ {tries} 回で当たり（答え {secret}）")
+            break
