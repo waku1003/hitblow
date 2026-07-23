@@ -9,7 +9,6 @@ dependencies = []
 # 第3回でコメントを外す：`hitblow` コマンドが使えるようになる
 [project.scripts]
 hitblow = "hitblow.cli:main"
-hitblow-gui = "hitblow.gui:main"
 
 [build-system]
 requires = ["hatchling"]
